@@ -12,6 +12,7 @@ type Props = {
   rawSavingThisMonth?: number;
   currentCashBalance?: number;
   totalSavingLoan?: number;
+  onPayLoan?: (amount: number) => void;
   expenses: Expense[];
 };
 
@@ -22,6 +23,7 @@ export default function HeroBalanceCard({
   rawSavingThisMonth,
   currentCashBalance,
   totalSavingLoan = 0,
+  onPayLoan,
   expenses,
 }: Props) {
   const { isBalanceHidden, toggleBalanceHidden } = useExpenseStore();
@@ -68,10 +70,21 @@ export default function HeroBalanceCard({
 
       {totalSavingLoan > 0 && (
         <View className="flex-row items-center justify-between bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 rounded-xl mb-2">
-          <Text className="text-[10px] font-bold text-amber-300">📌 Pinjaman ke Tabungan</Text>
-          <Text className="text-[11px] font-black text-amber-300">
-            {isBalanceHidden ? '••••' : `Rp ${totalSavingLoan.toLocaleString('id-ID')}`}
-          </Text>
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-[10px] font-bold text-amber-300">📌 Pinjam Tabungan:</Text>
+            <Text className="text-[11px] font-black text-amber-300">
+              {isBalanceHidden ? '••••' : `Rp ${totalSavingLoan.toLocaleString('id-ID')}`}
+            </Text>
+          </View>
+          {onPayLoan && (
+            <TouchableOpacity
+              onPress={() => onPayLoan(totalSavingLoan)}
+              className="bg-amber-400 px-2.5 py-1 rounded-lg"
+              activeOpacity={0.8}
+            >
+              <Text className="text-[10px] font-extrabold text-slate-950">Kembalikan</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

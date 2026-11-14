@@ -72,6 +72,7 @@ export default function HomeScreen() {
           rawSavingThisMonth={rawSavingThisMonth}
           currentCashBalance={currentCashBalance}
           totalSavingLoan={totalSavingLoan}
+          onPayLoan={(amt) => openInputModal('saving', null, amt, true)}
           expenses={expenses}
         />
 

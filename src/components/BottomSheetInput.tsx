@@ -7,6 +7,7 @@ import { inputTypeConfigs } from '../constants/inputConfig';
 import InputTypeTabs from './input/InputTypeTabs';
 import InputAmountHero from './input/InputAmountHero';
 import ExpenseSourceSelector from './input/ExpenseSourceSelector';
+import SavingRepaymentOption from './input/SavingRepaymentOption';
 import CategoryPickerScreen from './input/CategoryPickerScreen';
 import InputCategoryTileRow from './input/InputCategoryTileRow';
 import InputNoteField from './input/InputNoteField';
@@ -14,8 +15,10 @@ import InputNoteField from './input/InputNoteField';
 type Props = { visible?: boolean; onClose?: () => void };
 
 export default function BottomSheetInput({ visible, onClose }: Props) {
-  const { categories, addExpense, isInputModalOpen, closeInputModal, inputInitialType, inputInitialCategoryId } =
-    useExpenseStore();
+  const {
+    categories, addExpense, isInputModalOpen, closeInputModal,
+    inputInitialType, inputInitialCategoryId, inputInitialAmount, inputInitialIsRepayment,
+  } = useExpenseStore();
 
   const isVisible = visible !== undefined ? visible : isInputModalOpen;
   const handleClose = () => { if (onClose) onClose(); closeInputModal(); };
@@ -27,6 +30,7 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [source, setSource] = useState<ExpenseSource>('cash');
   const [isSavingLoan, setIsSavingLoan] = useState(false);
+  const [isLoanRepayment, setIsLoanRepayment] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
@@ -37,8 +41,11 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
       setStep('form');
       const firstCat = categories.find((c) => c.type === type);
       setSelectedCategoryId(inputInitialCategoryId || firstCat?.id || null);
+      setAmount(inputInitialAmount ? inputInitialAmount.toString() : '');
+      setIsLoanRepayment(!!inputInitialIsRepayment);
+      if (inputInitialIsRepayment) setNote('Pelunasan pinjaman tabungan');
     }
-  }, [isVisible, inputInitialType, inputInitialCategoryId, categories]);
+  }, [isVisible, inputInitialType, inputInitialCategoryId, inputInitialAmount, inputInitialIsRepayment, categories]);
 
   const handleTypeChange = (t: TransactionType) => {
     setActiveType(t);
@@ -49,7 +56,7 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
   const handleSave = async () => {
     const cleanAmount = parseInt(amount, 10);
     if (!cleanAmount || !selectedCategoryId) return;
-    await addExpense(cleanAmount, selectedCategoryId, note, activeType, source, isSavingLoan);
+    await addExpense(cleanAmount, selectedCategoryId, note, activeType, source, isSavingLoan, isLoanRepayment);
     setAmount(''); setNote(''); handleClose();
   };
 
@@ -86,7 +93,14 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
                 source={source}
                 onSourceChange={setSource}
                 isSavingLoan={isSavingLoan}
-                onToggleSavingLoan={() => setIsSavingLoan((prev) => !prev)}
+                onToggleSavingLoan={() => setIsSavingLoan((p) => !p)}
+              />
+            )}
+
+            {activeType === 'saving' && (
+              <SavingRepaymentOption
+                isRepayment={isLoanRepayment}
+                onToggle={() => setIsLoanRepayment((p) => !p)}
               />
             )}
 

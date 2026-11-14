@@ -29,9 +29,9 @@ export default function TransactionHistoryItem({
     badgeBg = 'bg-emerald-50 border-emerald-100';
   } else if (isSaving) {
     sign = '';
-    amountColor = 'text-sky-600';
-    typeLabel = 'Tabungan';
-    badgeBg = 'bg-sky-50 border-sky-100';
+    amountColor = item.isLoanRepayment ? 'text-emerald-600' : 'text-sky-600';
+    typeLabel = item.isLoanRepayment ? '✓ Pelunasan Tabungan' : 'Tabungan';
+    badgeBg = item.isLoanRepayment ? 'bg-emerald-50 border-emerald-200' : 'bg-sky-50 border-sky-100';
   } else if (item.source === 'saving') {
     sign = '-';
     if (item.isSavingLoan) {

@@ -53,10 +53,16 @@ export function useDashboardFinancials(expenses: Expense[]) {
     // Total brankas tabungan terkumpul sepanjang masa (dikurangi yang pernah diambil)
     const lifetimeNetSaving = Math.max(0, totalSavingDepositedAllTime - totalSavingSpentAllTime);
 
-    // Pinjaman ke tabungan yang belum diganti
-    const totalSavingLoan = expenses
+    // Pinjaman ke tabungan yang belum diganti (dipinjam dikurangi yang sudah dilunasi)
+    const totalBorrowedFromSavings = expenses
       .filter((e) => e.type === 'expense' && e.source === 'saving' && e.isSavingLoan)
       .reduce((sum, e) => sum + e.amount, 0);
+
+    const totalRepaidToSavings = expenses
+      .filter((e) => e.type === 'saving' && e.isLoanRepayment)
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    const totalSavingLoan = Math.max(0, totalBorrowedFromSavings - totalRepaidToSavings);
 
     return {
       expensesToday,

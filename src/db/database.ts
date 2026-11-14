@@ -15,21 +15,15 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
         note TEXT,
         type TEXT NOT NULL,
         source TEXT,
-        isSavingLoan INTEGER DEFAULT 0
+        isSavingLoan INTEGER DEFAULT 0,
+        isLoanRepayment INTEGER DEFAULT 0
       );
       CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date);
-      CREATE TABLE IF NOT EXISTS settings (
-        key TEXT PRIMARY KEY NOT NULL,
-        value TEXT NOT NULL
-      );
+      CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY NOT NULL, value TEXT NOT NULL);
     `);
-
-    try {
-      await dbInstance.execAsync('ALTER TABLE expenses ADD COLUMN source TEXT;');
-    } catch {}
-    try {
-      await dbInstance.execAsync('ALTER TABLE expenses ADD COLUMN isSavingLoan INTEGER DEFAULT 0;');
-    } catch {}
+    try { await dbInstance.execAsync('ALTER TABLE expenses ADD COLUMN source TEXT;'); } catch {}
+    try { await dbInstance.execAsync('ALTER TABLE expenses ADD COLUMN isSavingLoan INTEGER DEFAULT 0;'); } catch {}
+    try { await dbInstance.execAsync('ALTER TABLE expenses ADD COLUMN isLoanRepayment INTEGER DEFAULT 0;'); } catch {}
   }
   return dbInstance;
 }
@@ -37,14 +31,8 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 export async function dbGetExpenses(): Promise<Expense[]> {
   const db = await getDatabase();
   const rows = await db.getAllAsync<{
-    id: string;
-    amount: number;
-    categoryId: string;
-    date: string;
-    note: string | null;
-    type: string;
-    source: string | null;
-    isSavingLoan: number | null;
+    id: string; amount: number; categoryId: string; date: string; note: string | null;
+    type: string; source: string | null; isSavingLoan: number | null; isLoanRepayment: number | null;
   }>('SELECT * FROM expenses ORDER BY date DESC');
 
   return rows.map((r) => ({
@@ -56,23 +44,15 @@ export async function dbGetExpenses(): Promise<Expense[]> {
     type: r.type as Expense['type'],
     source: (r.source === 'saving' ? 'saving' : 'cash') as Expense['source'],
     isSavingLoan: r.isSavingLoan === 1,
+    isLoanRepayment: r.isLoanRepayment === 1,
   }));
 }
 
 export async function dbInsertExpense(exp: Expense): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'INSERT INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-    [
-      exp.id,
-      exp.amount,
-      exp.categoryId,
-      exp.date,
-      exp.note || '',
-      exp.type,
-      exp.source || 'cash',
-      exp.isSavingLoan ? 1 : 0,
-    ]
+    'INSERT INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan, isLoanRepayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [exp.id, exp.amount, exp.categoryId, exp.date, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0]
   );
 }
 
@@ -90,17 +70,8 @@ export async function dbImportExpenses(items: Expense[]): Promise<void> {
   const db = await getDatabase();
   for (const exp of items) {
     await db.runAsync(
-      'INSERT OR REPLACE INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [
-        exp.id,
-        exp.amount,
-        exp.categoryId,
-        exp.date,
-        exp.note || '',
-        exp.type,
-        exp.source || 'cash',
-        exp.isSavingLoan ? 1 : 0,
-      ]
+      'INSERT OR REPLACE INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan, isLoanRepayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [exp.id, exp.amount, exp.categoryId, exp.date, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0]
     );
   }
 }

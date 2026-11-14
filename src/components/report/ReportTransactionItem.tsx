@@ -24,7 +24,7 @@ export default function ReportTransactionItem({
     amountColor = 'text-emerald-600';
   } else if (isSaving) {
     sign = '';
-    amountColor = 'text-sky-600';
+    amountColor = item.isLoanRepayment ? 'text-emerald-600' : 'text-sky-600';
   } else if (item.source === 'saving') {
     amountColor = item.isSavingLoan ? 'text-amber-600' : 'text-sky-700';
   }
@@ -42,6 +42,7 @@ export default function ReportTransactionItem({
 
   const isLoan = item.type === 'expense' && item.source === 'saving' && item.isSavingLoan;
   const isSavingSpent = item.type === 'expense' && item.source === 'saving' && !item.isSavingLoan;
+  const isRepayment = item.type === 'saving' && item.isLoanRepayment;
 
   return (
     <View className="flex-row justify-between items-center bg-white p-3.5 rounded-2xl mb-2 border border-slate-200/80">

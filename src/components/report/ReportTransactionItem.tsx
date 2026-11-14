@@ -68,6 +68,11 @@ export default function ReportTransactionItem({
                 <Text className="text-[8px] font-extrabold text-sky-800">Tabungan</Text>
               </View>
             )}
+            {isRepayment && (
+              <View className="bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-md">
+                <Text className="text-[8px] font-extrabold text-emerald-800">✓ Pelunasan Tabungan</Text>
+              </View>
+            )}
           </View>
           <Text className="text-slate-400 text-[10px] font-medium mt-0.5">
             {formatTime(item.date)} {item.note ? `• ${item.note}` : ''}

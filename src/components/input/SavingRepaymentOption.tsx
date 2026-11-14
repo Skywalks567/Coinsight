@@ -38,3 +38,4 @@ export default function SavingRepaymentOption({ isRepayment, onToggle }: Props) 
     </View>
   );
 }
+

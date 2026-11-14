@@ -21,8 +21,8 @@ export default function SearchResultItem({ item, category }: Props) {
     badgeBg = 'bg-emerald-50 border-emerald-100';
   } else if (isSaving) {
     sign = '';
-    amountColor = 'text-sky-600';
-    badgeBg = 'bg-sky-50 border-sky-100';
+    amountColor = item.isLoanRepayment ? 'text-emerald-600' : 'text-sky-600';
+    badgeBg = item.isLoanRepayment ? 'bg-emerald-50 border-emerald-100' : 'bg-sky-50 border-sky-100';
   }
 
   const formatDate = (isoString: string) => {
@@ -49,7 +49,7 @@ export default function SearchResultItem({ item, category }: Props) {
             {item.note || category?.name || 'Transaksi'}
           </Text>
           <Text className="text-[10px] text-slate-400 font-medium mt-0.5">
-            {formatDate(item.date)} • {category?.name}
+            {formatDate(item.date)} • {item.isLoanRepayment ? 'Pelunasan Tabungan' : (category?.name || 'Transaksi')}
           </Text>
         </View>
       </View>

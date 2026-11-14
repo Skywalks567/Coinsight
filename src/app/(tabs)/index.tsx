@@ -14,15 +14,9 @@ import AlarmPickerModal from '../../components/AlarmPickerModal';
 export default function HomeScreen() {
   const router = useRouter();
   const {
-    initialize,
-    expenses,
-    categories,
-    isLoading,
-    monthlyBudget,
-    budgetMode,
-    deleteExpense,
-    alarmTime,
-    setAlarmTime,
+    initialize, expenses, categories, isLoading,
+    monthlyBudget, budgetMode, deleteExpense,
+    alarmTime, setAlarmTime, openInputModal,
   } = useExpenseStore();
 
   useEffect(() => {

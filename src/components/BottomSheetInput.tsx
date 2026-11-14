@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { X, Check } from 'lucide-react-native';
+import { Check } from 'lucide-react-native';
 import { useExpenseStore, TransactionType } from '../store/useExpenseStore';
 import { ExpenseSource } from '../types/expense';
 import { inputTypeConfigs } from '../constants/inputConfig';
+import InputModalHeader from './input/InputModalHeader';
 import InputTypeTabs from './input/InputTypeTabs';
 import InputAmountHero from './input/InputAmountHero';
 import ExpenseSourceSelector from './input/ExpenseSourceSelector';
@@ -35,10 +36,7 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
   useEffect(() => {
     if (isVisible) {
       const type = inputInitialType || 'expense';
-      setActiveType(type);
-      setSource('cash');
-      setIsSavingLoan(false);
-      setStep('form');
+      setActiveType(type); setSource('cash'); setIsSavingLoan(false); setStep('form');
       const firstCat = categories.find((c) => c.type === type);
       setSelectedCategoryId(inputInitialCategoryId || firstCat?.id || null);
       setAmount(inputInitialAmount ? inputInitialAmount.toString() : '');
@@ -62,6 +60,7 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
 
   const selectedCat = categories.find((c) => c.id === selectedCategoryId);
   const typeConfig = inputTypeConfigs[activeType];
+  const canSave = Boolean(amount && selectedCategoryId);
 
   return (
     <Modal visible={isVisible} animationType="slide" presentationStyle="fullScreen" onRequestClose={handleClose}>
@@ -75,14 +74,7 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
         />
       ) : (
         <View className="flex-1 bg-white pt-12 px-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <TouchableOpacity onPress={handleClose} className="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 items-center justify-center">
-              <X size={18} color="#0F172A" />
-            </TouchableOpacity>
-            <Text className="text-base font-extrabold text-slate-900">Catat Transaksi</Text>
-            <View className="w-9" />
-          </View>
-
+          <InputModalHeader title="Catat Transaksi" onClose={handleClose} />
           <InputTypeTabs activeType={activeType} onChangeType={handleTypeChange} />
 
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
@@ -105,17 +97,16 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
             )}
 
             <InputCategoryTileRow selectedCategory={selectedCat} onPress={() => setStep('category')} />
-
             <InputNoteField note={note} onChangeNote={setNote} />
 
             <TouchableOpacity
               onPress={handleSave}
-              disabled={!amount || !selectedCategoryId}
-              className={`p-4 rounded-2xl flex-row items-center justify-center gap-2 ${amount && selectedCategoryId ? typeConfig.btnBg : 'bg-slate-200'}`}
-              style={amount && selectedCategoryId ? { elevation: 3 } : undefined}
+              disabled={!canSave}
+              className={`p-4 rounded-2xl flex-row items-center justify-center gap-2 ${canSave ? typeConfig.btnBg : 'bg-slate-200'}`}
+              style={canSave ? { elevation: 3 } : undefined}
             >
-              <Check size={18} color={amount && selectedCategoryId ? '#FFFFFF' : '#94A3B8'} strokeWidth={2.5} />
-              <Text className={`font-black text-sm ${amount && selectedCategoryId ? 'text-white' : 'text-slate-400'}`}>
+              <Check size={18} color={canSave ? '#FFFFFF' : '#94A3B8'} strokeWidth={2.5} />
+              <Text className={`font-black text-sm ${canSave ? 'text-white' : 'text-slate-400'}`}>
                 {typeConfig.btnText}
               </Text>
             </TouchableOpacity>

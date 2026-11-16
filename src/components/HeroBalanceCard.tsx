@@ -10,7 +10,9 @@ type Props = {
   totalIncomeThisMonth: number;
   totalSavingThisMonth: number;
   rawSavingThisMonth?: number;
+  currentCashBalance?: number;
   totalSavingLoan?: number;
+  onPayLoan?: (amount: number) => void;
   expenses: Expense[];
 };
 
@@ -19,13 +21,18 @@ export default function HeroBalanceCard({
   totalIncomeThisMonth,
   totalSavingThisMonth,
   rawSavingThisMonth,
+  currentCashBalance,
   totalSavingLoan = 0,
+  onPayLoan,
   expenses,
 }: Props) {
   const { isBalanceHidden, toggleBalanceHidden } = useExpenseStore();
 
   const cashSaved = rawSavingThisMonth !== undefined ? rawSavingThisMonth : totalSavingThisMonth;
-  const netBalance = totalIncomeThisMonth - totalExpenseThisMonth - cashSaved;
+  const netBalance = currentCashBalance !== undefined
+    ? currentCashBalance
+    : totalIncomeThisMonth - totalExpenseThisMonth - cashSaved;
+
   const currentMonthYear = new Date().toLocaleDateString('id-ID', {
     month: 'long',
     year: 'numeric',
@@ -42,7 +49,7 @@ export default function HeroBalanceCard({
       <View className="flex-row justify-between items-start mb-2">
         <View>
           <Text className="text-[11px] text-indigo-200 font-bold uppercase tracking-wider">
-            Sisa Saldo Kas Bulan Ini
+            Sisa Saldo Kas
           </Text>
           <View className="flex-row items-center gap-2.5 mt-1">
             <Text className="text-2xl font-black tracking-tight text-white">
@@ -63,10 +70,21 @@ export default function HeroBalanceCard({
 
       {totalSavingLoan > 0 && (
         <View className="flex-row items-center justify-between bg-amber-500/15 border border-amber-500/30 px-3 py-1.5 rounded-xl mb-2">
-          <Text className="text-[10px] font-bold text-amber-300">📌 Pinjaman ke Tabungan</Text>
-          <Text className="text-[11px] font-black text-amber-300">
-            {isBalanceHidden ? '••••' : `Rp ${totalSavingLoan.toLocaleString('id-ID')}`}
-          </Text>
+          <View className="flex-row items-center gap-1.5">
+            <Text className="text-[10px] font-bold text-amber-300">📌 Pinjam Tabungan:</Text>
+            <Text className="text-[11px] font-black text-amber-300">
+              {isBalanceHidden ? '••••' : `Rp ${totalSavingLoan.toLocaleString('id-ID')}`}
+            </Text>
+          </View>
+          {onPayLoan && (
+            <TouchableOpacity
+              onPress={() => onPayLoan(totalSavingLoan)}
+              className="bg-amber-400 px-2.5 py-1 rounded-lg"
+              activeOpacity={0.8}
+            >
+              <Text className="text-[10px] font-extrabold text-slate-950">Kembalikan</Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 

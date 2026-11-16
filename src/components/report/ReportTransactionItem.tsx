@@ -1,19 +1,25 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Trash2 } from 'lucide-react-native';
+import { MoreVertical } from 'lucide-react-native';
 import { Expense, Category } from '../../types/expense';
+import TransactionActionPopover from '../history/TransactionActionPopover';
 
 type Props = {
   item: Expense;
   category?: Category;
   onPressDelete: (id: string) => void;
+  onPressEdit?: (item: Expense) => void;
 };
 
 export default function ReportTransactionItem({
   item,
   category,
   onPressDelete,
+  onPressEdit,
 }: Props) {
+  const [anchor, setAnchor] = useState<{ x: number; y: number } | null>(null);
+  const btnRef = useRef<any>(null);
+
   const isIncome = item.type === 'income';
   const isSaving = item.type === 'saving';
 
@@ -24,7 +30,7 @@ export default function ReportTransactionItem({
     amountColor = 'text-emerald-600';
   } else if (isSaving) {
     sign = '';
-    amountColor = 'text-sky-600';
+    amountColor = item.isLoanRepayment ? 'text-emerald-600' : 'text-sky-600';
   } else if (item.source === 'saving') {
     amountColor = item.isSavingLoan ? 'text-amber-600' : 'text-sky-700';
   }
@@ -32,16 +38,21 @@ export default function ReportTransactionItem({
   const formatTime = (isoString: string) => {
     try {
       const d = new Date(isoString);
-      const hours = d.getHours().toString().padStart(2, '0');
-      const minutes = d.getMinutes().toString().padStart(2, '0');
-      return `${hours}:${minutes} WIB`;
+      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')} WIB`;
     } catch {
       return '';
     }
   };
 
+  const handleOpenMenu = () => {
+    btnRef.current?.measureInWindow?.((x: number, y: number, width: number, height: number) => {
+      setAnchor({ x: x + width, y: y + height });
+    });
+  };
+
   const isLoan = item.type === 'expense' && item.source === 'saving' && item.isSavingLoan;
   const isSavingSpent = item.type === 'expense' && item.source === 'saving' && !item.isSavingLoan;
+  const isRepayment = item.type === 'saving' && item.isLoanRepayment;
 
   return (
     <View className="flex-row justify-between items-center bg-white p-3.5 rounded-2xl mb-2 border border-slate-200/80">
@@ -67,20 +78,38 @@ export default function ReportTransactionItem({
                 <Text className="text-[8px] font-extrabold text-sky-800">Tabungan</Text>
               </View>
             )}
+            {isRepayment && (
+              <View className="bg-emerald-100 border border-emerald-300 px-1.5 py-0.5 rounded-md">
+                <Text className="text-[8px] font-extrabold text-emerald-800">✓ Pelunasan Tabungan</Text>
+              </View>
+            )}
           </View>
           <Text className="text-slate-400 text-[10px] font-medium mt-0.5">
             {formatTime(item.date)} {item.note ? `• ${item.note}` : ''}
           </Text>
         </View>
       </View>
-      <View className="flex-row items-center gap-3">
+      <View className="flex-row items-center gap-2">
         <Text className={`${amountColor} font-black text-xs`}>
           {sign} Rp {item.amount.toLocaleString('id-ID')}
         </Text>
-        <TouchableOpacity onPress={() => onPressDelete(item.id)} className="p-1">
-          <Trash2 size={14} color="#94A3B8" />
+        <TouchableOpacity
+          ref={btnRef as any}
+          onPress={handleOpenMenu}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          className="p-1 rounded-lg active:bg-slate-100"
+        >
+          <MoreVertical size={16} color="#94A3B8" />
         </TouchableOpacity>
       </View>
+
+      <TransactionActionPopover
+        visible={Boolean(anchor)}
+        anchor={anchor}
+        onClose={() => setAnchor(null)}
+        onEdit={() => onPressEdit?.(item)}
+        onDelete={() => onPressDelete(item.id)}
+      />
     </View>
   );
 }

@@ -4,15 +4,20 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import { useExpenseStore, Expense } from '../store/useExpenseStore';
 import { exportBackupToFile, importBackupFromFile } from '../services/backupService';
+import { exportTransactionsToExcel } from '../services/excelExportService';
+import { exportTransactionsToPdf } from '../services/pdfExportService';
+import { getMonthDateRange } from '../components/report/reportDateUtils';
 import BudgetSection from '../components/settings/BudgetSection';
+import ReportExportSection from '../components/settings/ReportExportSection';
 import BackupRestoreSection from '../components/settings/BackupRestoreSection';
 import DangerZoneSection from '../components/settings/DangerZoneSection';
+import HelpGuideSection from '../components/settings/HelpGuideSection';
 import ResetConfirmModal from '../components/settings/ResetConfirmModal';
 import ImportConfirmModal from '../components/settings/ImportConfirmModal';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { monthlyBudget, setMonthlyBudget, budgetMode, setBudgetMode, expenses, resetAllData, importExpenses } =
+  const { monthlyBudget, setMonthlyBudget, budgetMode, setBudgetMode, expenses, categories, resetAllData, importExpenses } =
     useExpenseStore();
 
   const [tempBudget, setTempBudget] = useState(monthlyBudget.toString());
@@ -27,28 +32,37 @@ export default function SettingsScreen() {
 
   const handleSaveBudget = () => {
     const num = parseInt(tempBudget.replace(/[^0-9]/g, ''), 10);
-    if (!isNaN(num) && num > 0) {
-      setMonthlyBudget(num);
-      showSuccess('Batas budget berhasil disimpan');
-    }
+    if (!isNaN(num) && num > 0) { setMonthlyBudget(num); showSuccess('Batas budget berhasil disimpan'); }
   };
 
   const handleExportFile = async () => {
-    const success = await exportBackupToFile(expenses);
-    if (success) {
-      showSuccess('File cadangan siap disimpan / dibagikan');
-    } else {
-      Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file cadangan.');
-    }
+    const ok = await exportBackupToFile(expenses);
+    if (ok) showSuccess('File cadangan siap disimpan / dibagikan');
+    else Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file cadangan.');
+  };
+
+  const handleExportExcel = async () => {
+    if (!expenses.length) return Alert.alert('Info', 'Belum ada transaksi untuk diekspor.');
+    const ok = await exportTransactionsToExcel(expenses, categories, 'semua_transaksi');
+    if (ok) showSuccess('File Excel (.xlsx) siap disimpan / dibagikan');
+    else Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file Excel.');
+  };
+
+  const handleExportPdf = async () => {
+    const range = getMonthDateRange(new Date());
+    const mItems = expenses.filter((e) => e.date.substring(0, 7) === range.startDate.substring(0, 7));
+    if (!mItems.length) return Alert.alert('Info', 'Belum ada transaksi bulan ini untuk diekspor.');
+    const totalExp = mItems.filter((e) => e.type === 'expense').reduce((s, e) => s + e.amount, 0);
+    const dailyAvg = Math.floor(totalExp / Math.max(1, new Date().getDate()));
+    const ok = await exportTransactionsToPdf(mItems, categories, monthlyBudget, budgetMode, range.label, dailyAvg);
+    if (ok) showSuccess('File PDF (.pdf) siap disimpan / dibagikan');
+    else Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file PDF.');
   };
 
   const handleImportFile = async () => {
     const items = await importBackupFromFile();
-    if (items && items.length > 0) {
-      setPendingImportItems(items);
-    } else if (items !== null) {
-      Alert.alert('Gagal', 'File cadangan tidak valid atau tidak memiliki catatan transaksi.');
-    }
+    if (items && items.length > 0) setPendingImportItems(items);
+    else if (items !== null) Alert.alert('Gagal', 'File cadangan tidak valid atau kosong.');
   };
 
   const handleConfirmImport = async () => {
@@ -63,10 +77,7 @@ export default function SettingsScreen() {
     <View className="flex-1 bg-slate-50">
       <StatusBar barStyle="dark-content" />
       <View className="px-5 pt-12 pb-4 bg-white border-b border-slate-200/80 flex-row items-center justify-between">
-        <TouchableOpacity
-          onPress={() => router.back()}
-          className="w-10 h-10 rounded-2xl bg-slate-100 items-center justify-center border border-slate-200/60"
-        >
+        <TouchableOpacity onPress={() => router.back()} className="w-10 h-10 rounded-2xl bg-slate-100 items-center justify-center border border-slate-200/60">
           <ArrowLeft size={18} color="#334155" />
         </TouchableOpacity>
         <Text className="text-slate-900 font-extrabold text-base">Pengaturan</Text>
@@ -83,31 +94,19 @@ export default function SettingsScreen() {
 
         <BudgetSection
           budgetMode={budgetMode}
-          onChangeMode={async (m) => {
-            await setBudgetMode(m);
-            showSuccess(m === 'auto' ? 'Mode Otomatis diaktifkan' : 'Mode Manual diaktifkan');
-          }}
-          budgetInput={tempBudget}
-          onChangeBudget={setTempBudget}
-          onSave={handleSaveBudget}
+          onChangeMode={async (m) => { await setBudgetMode(m); showSuccess(m === 'auto' ? 'Mode Otomatis aktif' : 'Mode Manual aktif'); }}
+          budgetInput={tempBudget} onChangeBudget={setTempBudget} onSave={handleSaveBudget}
         />
+        <HelpGuideSection onPressGuide={() => router.push('/guide')} />
+        <ReportExportSection onExportExcel={handleExportExcel} onExportPdf={handleExportPdf} totalRecords={expenses.length} />
         <BackupRestoreSection totalRecords={expenses.length} onExport={handleExportFile} onImport={handleImportFile} />
         <DangerZoneSection onPressReset={() => setIsResetOpen(true)} />
 
         <View className="items-center pb-8"><Text className="text-slate-400 text-xs font-semibold">Versi 1.0.0</Text></View>
       </ScrollView>
 
-      <ImportConfirmModal
-        visible={!!pendingImportItems}
-        itemCount={pendingImportItems ? pendingImportItems.length : 0}
-        onClose={() => setPendingImportItems(null)}
-        onConfirm={handleConfirmImport}
-      />
-      <ResetConfirmModal
-        visible={isResetOpen}
-        onClose={() => setIsResetOpen(false)}
-        onConfirm={async () => { await resetAllData(); setIsResetOpen(false); showSuccess('Seluruh catatan direset'); }}
-      />
+      <ImportConfirmModal visible={!!pendingImportItems} itemCount={pendingImportItems ? pendingImportItems.length : 0} onClose={() => setPendingImportItems(null)} onConfirm={handleConfirmImport} />
+      <ResetConfirmModal visible={isResetOpen} onClose={() => setIsResetOpen(false)} onConfirm={async () => { await resetAllData(); setIsResetOpen(false); showSuccess('Seluruh catatan direset'); }} />
     </View>
   );
 }

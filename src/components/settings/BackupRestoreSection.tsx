@@ -16,10 +16,10 @@ export default function BackupRestoreSection({
   return (
     <View className="bg-white border border-slate-200/90 rounded-3xl p-5 mb-5 shadow-sm">
       <Text className="text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-1.5">
-        Manajemen Berkas Cadangan
+        Cadangan & Pemulihan Data
       </Text>
       <Text className="text-slate-400 text-xs mb-4">
-        Cadangkan catatan ke file fisik .json atau pulihkan data dari file cadangan.
+        Cadangkan database ke file fisik .json atau pulihkan data saat berganti ponsel.
       </Text>
 
       <TouchableOpacity
@@ -29,7 +29,7 @@ export default function BackupRestoreSection({
       >
         <View className="flex-row items-center gap-2.5">
           <Download size={16} color="#4F46E5" />
-          <Text className="text-slate-700 text-xs font-bold">Ekspor File Cadangan (.json)</Text>
+          <Text className="text-slate-700 text-xs font-bold">Ekspor Cadangan JSON (.json)</Text>
         </View>
         <Text className="text-slate-400 text-[11px] font-semibold">{totalRecords} Catatan</Text>
       </TouchableOpacity>

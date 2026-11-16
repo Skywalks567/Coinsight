@@ -1,13 +1,14 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Expense, Category } from '../../types/expense';
 
 type Props = {
   item: Expense;
   category?: Category;
+  onPress?: () => void;
 };
 
-export default function SearchResultItem({ item, category }: Props) {
+export default function SearchResultItem({ item, category, onPress }: Props) {
   const isIncome = item.type === 'income';
   const isSaving = item.type === 'saving';
 
@@ -21,8 +22,8 @@ export default function SearchResultItem({ item, category }: Props) {
     badgeBg = 'bg-emerald-50 border-emerald-100';
   } else if (isSaving) {
     sign = '';
-    amountColor = 'text-sky-600';
-    badgeBg = 'bg-sky-50 border-sky-100';
+    amountColor = item.isLoanRepayment ? 'text-emerald-600' : 'text-sky-600';
+    badgeBg = item.isLoanRepayment ? 'bg-emerald-50 border-emerald-100' : 'bg-sky-50 border-sky-100';
   }
 
   const formatDate = (isoString: string) => {
@@ -39,7 +40,11 @@ export default function SearchResultItem({ item, category }: Props) {
   };
 
   return (
-    <View className="bg-white border border-slate-200/80 p-3.5 rounded-2xl flex-row items-center justify-between shadow-sm mb-2">
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      className="bg-white border border-slate-200/80 p-3.5 rounded-2xl flex-row items-center justify-between shadow-sm mb-2"
+    >
       <View className="flex-row items-center flex-1 pr-3">
         <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 border ${badgeBg}`}>
           <Text className="text-xl">{category?.icon || '💳'}</Text>
@@ -49,14 +54,14 @@ export default function SearchResultItem({ item, category }: Props) {
             {item.note || category?.name || 'Transaksi'}
           </Text>
           <Text className="text-[10px] text-slate-400 font-medium mt-0.5">
-            {formatDate(item.date)} • {category?.name}
+            {formatDate(item.date)} • {item.isLoanRepayment ? 'Pelunasan Tabungan' : (category?.name || 'Transaksi')}
           </Text>
         </View>
       </View>
       <Text className={`${amountColor} font-black text-xs`}>
         {sign} Rp {item.amount.toLocaleString('id-ID')}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 

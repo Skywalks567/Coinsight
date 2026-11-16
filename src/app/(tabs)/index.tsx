@@ -14,15 +14,9 @@ import AlarmPickerModal from '../../components/AlarmPickerModal';
 export default function HomeScreen() {
   const router = useRouter();
   const {
-    initialize,
-    expenses,
-    categories,
-    isLoading,
-    monthlyBudget,
-    budgetMode,
-    deleteExpense,
-    alarmTime,
-    setAlarmTime,
+    initialize, expenses, categories, isLoading,
+    monthlyBudget, budgetMode, deleteExpense,
+    alarmTime, setAlarmTime, openInputModal,
   } = useExpenseStore();
 
   useEffect(() => {
@@ -36,6 +30,7 @@ export default function HomeScreen() {
     totalIncomeThisMonth,
     rawSavingThisMonth,
     totalSavingThisMonth,
+    currentCashBalance,
     totalSavingLoan,
   } = useDashboardFinancials(expenses);
 
@@ -69,7 +64,9 @@ export default function HomeScreen() {
           totalIncomeThisMonth={totalIncomeThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
           rawSavingThisMonth={rawSavingThisMonth}
+          currentCashBalance={currentCashBalance}
           totalSavingLoan={totalSavingLoan}
+          onPayLoan={(amt) => openInputModal('saving', null, amt, true)}
           expenses={expenses}
         />
 
@@ -86,6 +83,7 @@ export default function HomeScreen() {
           totalExpenseToday={totalExpenseToday}
           totalExpenseThisMonth={totalExpenseThisMonth}
           totalSavingThisMonth={totalSavingThisMonth}
+          currentCashBalance={currentCashBalance}
         />
 
         <ExpenseHistoryList

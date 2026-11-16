@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text } from 'react-native';
 import { Expense, Category, TransactionType } from '../../types/expense';
+import { useExpenseStore } from '../../store/useExpenseStore';
 import ReportFilterPills from './ReportFilterPills';
 import ReportTransactionItem from './ReportTransactionItem';
 import DeleteConfirmModal from '../history/DeleteConfirmModal';
@@ -20,6 +21,7 @@ export default function MonthlyTransactionList({
   onFilterChange,
   onDeleteExpense,
 }: Props) {
+  const { openEditModal } = useExpenseStore();
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const handleConfirmDelete = () => {
@@ -82,6 +84,7 @@ export default function MonthlyTransactionList({
                 item={item}
                 category={categories.find((c) => c.id === item.categoryId)}
                 onPressDelete={setDeleteTargetId}
+                onPressEdit={openEditModal}
               />
             ))}
           </View>

@@ -19,6 +19,7 @@ export type Expense = {
   type: TransactionType;
   source?: ExpenseSource;
   isSavingLoan?: boolean;
+  isLoanRepayment?: boolean;
 };
 
 export type ExpenseState = {
@@ -33,6 +34,9 @@ export type ExpenseState = {
   isInputModalOpen: boolean;
   inputInitialType: TransactionType;
   inputInitialCategoryId: string | null;
+  inputInitialAmount?: number | null;
+  inputInitialIsRepayment?: boolean;
+  editingExpense?: Expense | null;
   initialize: () => void;
   addExpense: (
     amount: number,
@@ -40,14 +44,22 @@ export type ExpenseState = {
     note?: string,
     type?: TransactionType,
     source?: ExpenseSource,
-    isSavingLoan?: boolean
+    isSavingLoan?: boolean,
+    isLoanRepayment?: boolean
   ) => Promise<void>;
+  updateExpense: (expense: Expense) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
   setMonthlyBudget: (amount: number) => Promise<void>;
   setBudgetMode: (mode: 'auto' | 'manual') => Promise<void>;
   setAlarmTime: (time: string) => void;
   toggleBalanceHidden: () => void;
-  openInputModal: (type?: TransactionType, categoryId?: string | null) => void;
+  openInputModal: (
+    type?: TransactionType,
+    categoryId?: string | null,
+    initialAmount?: number | null,
+    isRepayment?: boolean
+  ) => void;
+  openEditModal: (expense: Expense) => void;
   closeInputModal: () => void;
   resetAllData: () => Promise<void>;
   importExpenses: (importedExpenses: Expense[]) => Promise<void>;

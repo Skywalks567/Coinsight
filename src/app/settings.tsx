@@ -8,6 +8,7 @@ import { exportTransactionsToExcel } from '../services/excelExportService';
 import BudgetSection from '../components/settings/BudgetSection';
 import BackupRestoreSection from '../components/settings/BackupRestoreSection';
 import DangerZoneSection from '../components/settings/DangerZoneSection';
+import HelpGuideSection from '../components/settings/HelpGuideSection';
 import ResetConfirmModal from '../components/settings/ResetConfirmModal';
 import ImportConfirmModal from '../components/settings/ImportConfirmModal';
 
@@ -92,10 +93,9 @@ export default function SettingsScreen() {
             await setBudgetMode(m);
             showSuccess(m === 'auto' ? 'Mode Otomatis diaktifkan' : 'Mode Manual diaktifkan');
           }}
-          budgetInput={tempBudget}
-          onChangeBudget={setTempBudget}
-          onSave={handleSaveBudget}
+          budgetInput={tempBudget} onChangeBudget={setTempBudget} onSave={handleSaveBudget}
         />
+        <HelpGuideSection onPressGuide={() => router.push('/guide')} />
         <BackupRestoreSection
           totalRecords={expenses.length} onExport={handleExportFile}
           onExportCsv={handleExportExcel} onImport={handleImportFile}

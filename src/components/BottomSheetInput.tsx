@@ -51,11 +51,12 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
     setSelectedCategoryId(firstCat?.id || null);
   };
 
-  const handleSave = async () => {
-    const cleanAmount = parseInt(amount, 10);
-    if (!cleanAmount || !selectedCategoryId) return;
-    await addExpense(cleanAmount, selectedCategoryId, note, activeType, source, isSavingLoan, isLoanRepayment);
+  const handleSave = () => {
+    const clean = parseInt(amount, 10);
+    if (!clean || !selectedCategoryId) return;
+    const [cId, n, t, s, l, r] = [selectedCategoryId, note, activeType, source, isSavingLoan, isLoanRepayment];
     setAmount(''); setNote(''); handleClose();
+    addExpense(clean, cId, n, t, s, l, r).catch(console.error);
   };
 
   const selectedCat = categories.find((c) => c.id === selectedCategoryId);

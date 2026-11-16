@@ -82,16 +82,16 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
 
     const updated = [newExpense, ...expenses];
     set({ expenses: updated });
-    await dbInsertExpense(newExpense);
-    await syncSmartAlarm(alarmTime, updated);
+    try { await dbInsertExpense(newExpense); } catch (e) { console.error(e); }
+    syncSmartAlarm(alarmTime, updated).catch(console.error);
   },
 
   deleteExpense: async (id) => {
     const { alarmTime, expenses } = get();
     const updated = expenses.filter((e) => e.id !== id);
     set({ expenses: updated });
-    await dbDeleteExpense(id);
-    await syncSmartAlarm(alarmTime, updated);
+    try { await dbDeleteExpense(id); } catch (e) { console.error(e); }
+    syncSmartAlarm(alarmTime, updated).catch(console.error);
   },
 
   resetAllData: async () => {

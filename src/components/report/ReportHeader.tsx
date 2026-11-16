@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { ChevronLeft, ChevronRight, Calendar, Sliders } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Calendar, Sliders, FileSpreadsheet } from 'lucide-react-native';
 
 type Props = {
   currentDate: Date;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onOpenPicker: () => void;
+  onExport?: () => void;
   label: string;
   isCustom: boolean;
 };
@@ -16,6 +17,7 @@ export default function ReportHeader({
   onPrevMonth,
   onNextMonth,
   onOpenPicker,
+  onExport,
   label,
   isCustom,
 }: Props) {
@@ -27,13 +29,28 @@ export default function ReportHeader({
 
   return (
     <View className="mb-4 pt-2">
-      <View className="flex-row items-center gap-1.5 mb-1">
-        <View className="w-2 h-2 rounded-full bg-indigo-600" />
-        <Text className="text-slate-400 text-[11px] uppercase tracking-wider font-extrabold">
-          Laporan Finansial
-        </Text>
+      <View className="flex-row items-center justify-between mb-3">
+        <View>
+          <View className="flex-row items-center gap-1.5 mb-1">
+            <View className="w-2 h-2 rounded-full bg-indigo-600" />
+            <Text className="text-slate-400 text-[11px] uppercase tracking-wider font-extrabold">
+              Laporan Finansial
+            </Text>
+          </View>
+          <Text className="text-slate-900 text-2xl font-black">Analisis Pengeluaran</Text>
+        </View>
+
+        {onExport && (
+          <TouchableOpacity
+            onPress={onExport}
+            activeOpacity={0.7}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+          >
+            <FileSpreadsheet size={18} color="#059669" />
+          </TouchableOpacity>
+        )}
       </View>
-      <Text className="text-slate-900 text-2xl font-black mb-3">Analisis Pengeluaran</Text>
 
       {/* Month & Period Navigator Capsule */}
       <View

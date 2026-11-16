@@ -1,16 +1,18 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Download, Upload } from 'lucide-react-native';
+import { Download, Upload, FileSpreadsheet } from 'lucide-react-native';
 
 type Props = {
   totalRecords: number;
   onExport: () => void;
+  onExportCsv: () => void;
   onImport: () => void;
 };
 
 export default function BackupRestoreSection({
   totalRecords,
   onExport,
+  onExportCsv,
   onImport,
 }: Props) {
   return (
@@ -29,9 +31,21 @@ export default function BackupRestoreSection({
       >
         <View className="flex-row items-center gap-2.5">
           <Download size={16} color="#4F46E5" />
-          <Text className="text-slate-700 text-xs font-bold">Ekspor File Cadangan (.json)</Text>
+          <Text className="text-slate-700 text-xs font-bold">Ekspor Cadangan JSON (.json)</Text>
         </View>
         <Text className="text-slate-400 text-[11px] font-semibold">{totalRecords} Catatan</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        onPress={onExportCsv}
+        activeOpacity={0.7}
+        className="bg-slate-50 border border-slate-200 py-3.5 px-4 rounded-2xl flex-row items-center justify-between mb-3 shadow-sm"
+      >
+        <View className="flex-row items-center gap-2.5">
+          <FileSpreadsheet size={16} color="#059669" />
+          <Text className="text-slate-700 text-xs font-bold">Ekspor Laporan Excel (.xlsx)</Text>
+        </View>
+        <Text className="text-emerald-600 text-[11px] font-bold">Multi-Sheet</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

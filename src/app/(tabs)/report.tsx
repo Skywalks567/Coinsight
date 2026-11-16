@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StatusBar } from 'react-native';
+import { View, ScrollView, StatusBar, Alert } from 'react-native';
 import { useExpenseStore, TransactionType } from '../../store/useExpenseStore';
+import { exportTransactionsToExcel } from '../../services/excelExportService';
 import ReportHeader from '../../components/report/ReportHeader';
 import ReportTabSwitch from '../../components/report/ReportTabSwitch';
 import ReportDonutHeroCard from '../../components/report/ReportDonutHeroCard';
@@ -19,16 +20,14 @@ export default function ReportScreen() {
 
   const handlePrevMonth = () => {
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
-    setSelectedDate(d);
-    setDateRange(getMonthDateRange(d));
+    setSelectedDate(d); setDateRange(getMonthDateRange(d));
   };
 
   const handleNextMonth = () => {
     const now = new Date();
     if (selectedDate.getFullYear() === now.getFullYear() && selectedDate.getMonth() >= now.getMonth()) return;
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
-    setSelectedDate(d);
-    setDateRange(getMonthDateRange(d));
+    setSelectedDate(d); setDateRange(getMonthDateRange(d));
   };
 
   const handleSelectMonth = (d: Date) => {
@@ -65,6 +64,12 @@ export default function ReportScreen() {
 
   const filteredList = periodExpenses.filter((e) => (filterType === 'all' ? true : e.type === filterType));
 
+  const handleExportExcel = async () => {
+    if (!periodExpenses.length) return Alert.alert('Info', 'Tidak ada transaksi pada periode ini untuk diekspor.');
+    const ok = await exportTransactionsToExcel(periodExpenses, categories, dateRange.label);
+    if (!ok) Alert.alert('Gagal', 'Terjadi kesalahan saat mengekspor file Excel.');
+  };
+
   return (
     <View className="flex-1 bg-slate-50">
       <StatusBar barStyle="dark-content" />
@@ -75,6 +80,7 @@ export default function ReportScreen() {
           onPrevMonth={handlePrevMonth}
           onNextMonth={handleNextMonth}
           onOpenPicker={() => setIsPickerOpen(true)}
+          onExport={handleExportExcel}
           label={dateRange.label}
           isCustom={dateRange.isCustom}
         />

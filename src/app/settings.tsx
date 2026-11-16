@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react-native';
 import { useExpenseStore, Expense } from '../store/useExpenseStore';
 import { exportBackupToFile, importBackupFromFile } from '../services/backupService';
+import { exportTransactionsToExcel } from '../services/excelExportService';
 import BudgetSection from '../components/settings/BudgetSection';
 import BackupRestoreSection from '../components/settings/BackupRestoreSection';
 import DangerZoneSection from '../components/settings/DangerZoneSection';
@@ -12,7 +13,7 @@ import ImportConfirmModal from '../components/settings/ImportConfirmModal';
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { monthlyBudget, setMonthlyBudget, budgetMode, setBudgetMode, expenses, resetAllData, importExpenses } =
+  const { monthlyBudget, setMonthlyBudget, budgetMode, setBudgetMode, expenses, categories, resetAllData, importExpenses } =
     useExpenseStore();
 
   const [tempBudget, setTempBudget] = useState(monthlyBudget.toString());
@@ -35,11 +36,15 @@ export default function SettingsScreen() {
 
   const handleExportFile = async () => {
     const success = await exportBackupToFile(expenses);
-    if (success) {
-      showSuccess('File cadangan siap disimpan / dibagikan');
-    } else {
-      Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file cadangan.');
-    }
+    if (success) showSuccess('File cadangan siap disimpan / dibagikan');
+    else Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file cadangan.');
+  };
+
+  const handleExportExcel = async () => {
+    if (!expenses.length) return Alert.alert('Info', 'Belum ada transaksi untuk diekspor.');
+    const success = await exportTransactionsToExcel(expenses, categories, 'semua_transaksi');
+    if (success) showSuccess('File Excel (.xlsx) siap disimpan / dibagikan');
+    else Alert.alert('Gagal', 'Terjadi kesalahan saat membuat file Excel.');
   };
 
   const handleImportFile = async () => {
@@ -91,21 +96,21 @@ export default function SettingsScreen() {
           onChangeBudget={setTempBudget}
           onSave={handleSaveBudget}
         />
-        <BackupRestoreSection totalRecords={expenses.length} onExport={handleExportFile} onImport={handleImportFile} />
+        <BackupRestoreSection
+          totalRecords={expenses.length} onExport={handleExportFile}
+          onExportCsv={handleExportExcel} onImport={handleImportFile}
+        />
         <DangerZoneSection onPressReset={() => setIsResetOpen(true)} />
 
         <View className="items-center pb-8"><Text className="text-slate-400 text-xs font-semibold">Versi 1.0.0</Text></View>
       </ScrollView>
 
       <ImportConfirmModal
-        visible={!!pendingImportItems}
-        itemCount={pendingImportItems ? pendingImportItems.length : 0}
-        onClose={() => setPendingImportItems(null)}
-        onConfirm={handleConfirmImport}
+        visible={!!pendingImportItems} itemCount={pendingImportItems ? pendingImportItems.length : 0}
+        onClose={() => setPendingImportItems(null)} onConfirm={handleConfirmImport}
       />
       <ResetConfirmModal
-        visible={isResetOpen}
-        onClose={() => setIsResetOpen(false)}
+        visible={isResetOpen} onClose={() => setIsResetOpen(false)}
         onConfirm={async () => { await resetAllData(); setIsResetOpen(false); showSuccess('Seluruh catatan direset'); }}
       />
     </View>

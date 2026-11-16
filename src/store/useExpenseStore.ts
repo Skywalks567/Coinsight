@@ -2,8 +2,8 @@ import { create } from 'zustand';
 import { TransactionType, Category, Expense, ExpenseState } from '../types/expense';
 import { defaultCategories } from '../constants/categories';
 import {
-  dbGetExpenses, dbInsertExpense, dbDeleteExpense, dbResetExpenses,
-  dbImportExpenses, dbGetSetting, dbSetSetting,
+  dbGetExpenses, dbInsertExpense, dbUpdateExpense, dbDeleteExpense,
+  dbResetExpenses, dbImportExpenses, dbGetSetting, dbSetSetting,
 } from '../db/database';
 import { syncSmartAlarm } from '../services/notificationService';
 
@@ -14,15 +14,9 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   categories: defaultCategories,
   isLoading: true,
   userId: null,
-  monthlyBudget: 3000000,
-  budgetMode: 'auto',
-  alarmTime: '20:00',
-  isBalanceHidden: false,
-  isInputModalOpen: false,
-  inputInitialType: 'expense',
-  inputInitialCategoryId: null,
-  inputInitialAmount: null,
-  inputInitialIsRepayment: false,
+  monthlyBudget: 3000000, budgetMode: 'auto', alarmTime: '20:00',
+  isBalanceHidden: false, isInputModalOpen: false, inputInitialType: 'expense',
+  inputInitialCategoryId: null, inputInitialAmount: null, inputInitialIsRepayment: false, editingExpense: null,
 
   setAlarmTime: async (time) => {
     set({ alarmTime: time });
@@ -36,14 +30,14 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   toggleBalanceHidden: () => set((s) => ({ isBalanceHidden: !s.isBalanceHidden })),
   openInputModal: (type = 'expense', categoryId = null, initialAmount = null, isRepayment = false) =>
     set({
-      isInputModalOpen: true,
-      inputInitialType: type,
-      inputInitialCategoryId: categoryId,
-      inputInitialAmount: initialAmount,
-      inputInitialIsRepayment: isRepayment,
+      isInputModalOpen: true, editingExpense: null, inputInitialType: type,
+      inputInitialCategoryId: categoryId, inputInitialAmount: initialAmount, inputInitialIsRepayment: isRepayment,
     }),
-  closeInputModal: () =>
-    set({ isInputModalOpen: false, inputInitialCategoryId: null, inputInitialAmount: null, inputInitialIsRepayment: false }),
+  openEditModal: (exp) => set({ isInputModalOpen: true, editingExpense: exp }),
+  closeInputModal: () => set({
+    isInputModalOpen: false, editingExpense: null,
+    inputInitialCategoryId: null, inputInitialAmount: null, inputInitialIsRepayment: false,
+  }),
 
   initialize: async () => {
     try {
@@ -70,19 +64,23 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     const resolvedType = type || cat?.type || 'expense';
     const newExpense: Expense = {
       id: `${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
-      amount,
-      categoryId,
-      date: new Date().toISOString(),
-      note: note || '',
+      amount, categoryId, date: new Date().toISOString(), note: note || '',
       type: resolvedType,
       source: resolvedType === 'expense' ? (source || 'cash') : undefined,
       isSavingLoan: resolvedType === 'expense' && source === 'saving' ? !!isSavingLoan : undefined,
       isLoanRepayment: resolvedType === 'saving' ? !!isLoanRepayment : undefined,
     };
-
     const updated = [newExpense, ...expenses];
     set({ expenses: updated });
     try { await dbInsertExpense(newExpense); } catch (e) { console.error(e); }
+    syncSmartAlarm(alarmTime, updated).catch(console.error);
+  },
+
+  updateExpense: async (exp) => {
+    const { alarmTime, expenses } = get();
+    const updated = expenses.map((e) => (e.id === exp.id ? exp : e));
+    set({ expenses: updated });
+    try { await dbUpdateExpense(exp); } catch (e) { console.error(e); }
     syncSmartAlarm(alarmTime, updated).catch(console.error);
   },
 

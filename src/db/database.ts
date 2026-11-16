@@ -52,7 +52,15 @@ export async function dbInsertExpense(exp: Expense): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
     'INSERT INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan, isLoanRepayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [exp.id, exp.amount, exp.categoryId, exp.date, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0]
+    [exp.amount, exp.categoryId, exp.date, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0, exp.id]
+  );
+}
+
+export async function dbUpdateExpense(exp: Expense): Promise<void> {
+  const db = await getDatabase();
+  await db.runAsync(
+    'UPDATE expenses SET amount = ?, categoryId = ?, note = ?, type = ?, source = ?, isSavingLoan = ?, isLoanRepayment = ? WHERE id = ?',
+    [exp.amount, exp.categoryId, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0, exp.id]
   );
 }
 

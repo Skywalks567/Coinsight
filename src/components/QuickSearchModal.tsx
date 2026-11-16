@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Modal, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { Search, X, FileSearch } from 'lucide-react-native';
 import { Expense, Category } from '../types/expense';
+import { useExpenseStore } from '../store/useExpenseStore';
 import SearchResultItem from './search/SearchResultItem';
 import SearchDatePresetChips, { DatePreset } from './search/SearchDatePresetChips';
 import { filterExpensesBySearch } from './search/searchUtils';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export default function QuickSearchModal({ visible, onClose, expenses, categories }: Props) {
+  const { openEditModal } = useExpenseStore();
   const [query, setQuery] = useState('');
   const [preset, setPreset] = useState<DatePreset>('all');
 
@@ -85,6 +87,10 @@ export default function QuickSearchModal({ visible, onClose, expenses, categorie
                     key={item.id}
                     item={item}
                     category={categories.find((c) => c.id === item.categoryId)}
+                    onPress={() => {
+                      handleClose();
+                      openEditModal(item);
+                    }}
                   />
                 ))}
               </>

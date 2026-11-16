@@ -1,13 +1,14 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Expense, Category } from '../../types/expense';
 
 type Props = {
   item: Expense;
   category?: Category;
+  onPress?: () => void;
 };
 
-export default function SearchResultItem({ item, category }: Props) {
+export default function SearchResultItem({ item, category, onPress }: Props) {
   const isIncome = item.type === 'income';
   const isSaving = item.type === 'saving';
 
@@ -39,7 +40,11 @@ export default function SearchResultItem({ item, category }: Props) {
   };
 
   return (
-    <View className="bg-white border border-slate-200/80 p-3.5 rounded-2xl flex-row items-center justify-between shadow-sm mb-2">
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      className="bg-white border border-slate-200/80 p-3.5 rounded-2xl flex-row items-center justify-between shadow-sm mb-2"
+    >
       <View className="flex-row items-center flex-1 pr-3">
         <View className={`w-10 h-10 rounded-xl items-center justify-center mr-3 border ${badgeBg}`}>
           <Text className="text-xl">{category?.icon || '💳'}</Text>
@@ -56,7 +61,7 @@ export default function SearchResultItem({ item, category }: Props) {
       <Text className={`${amountColor} font-black text-xs`}>
         {sign} Rp {item.amount.toLocaleString('id-ID')}
       </Text>
-    </View>
+    </TouchableOpacity>
   );
 }
 

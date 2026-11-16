@@ -36,6 +36,7 @@ export type ExpenseState = {
   inputInitialCategoryId: string | null;
   inputInitialAmount?: number | null;
   inputInitialIsRepayment?: boolean;
+  editingExpense?: Expense | null;
   initialize: () => void;
   addExpense: (
     amount: number,
@@ -46,6 +47,7 @@ export type ExpenseState = {
     isSavingLoan?: boolean,
     isLoanRepayment?: boolean
   ) => Promise<void>;
+  updateExpense: (expense: Expense) => Promise<void>;
   deleteExpense: (expenseId: string) => Promise<void>;
   setMonthlyBudget: (amount: number) => Promise<void>;
   setBudgetMode: (mode: 'auto' | 'manual') => Promise<void>;
@@ -57,6 +59,7 @@ export type ExpenseState = {
     initialAmount?: number | null,
     isRepayment?: boolean
   ) => void;
+  openEditModal: (expense: Expense) => void;
   closeInputModal: () => void;
   resetAllData: () => Promise<void>;
   importExpenses: (importedExpenses: Expense[]) => Promise<void>;

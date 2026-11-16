@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
-import { Check } from 'lucide-react-native';
+import { View, Modal, ScrollView } from 'react-native';
 import { useExpenseStore, TransactionType } from '../store/useExpenseStore';
 import { ExpenseSource } from '../types/expense';
 import { inputTypeConfigs } from '../constants/inputConfig';
@@ -12,13 +11,15 @@ import SavingRepaymentOption from './input/SavingRepaymentOption';
 import CategoryPickerScreen from './input/CategoryPickerScreen';
 import InputCategoryTileRow from './input/InputCategoryTileRow';
 import InputNoteField from './input/InputNoteField';
+import EditDateBadge from './input/EditDateBadge';
+import InputSubmitButton from './input/InputSubmitButton';
 
 type Props = { visible?: boolean; onClose?: () => void };
 
 export default function BottomSheetInput({ visible, onClose }: Props) {
   const {
-    categories, addExpense, isInputModalOpen, closeInputModal,
-    inputInitialType, inputInitialCategoryId, inputInitialAmount, inputInitialIsRepayment,
+    categories, addExpense, updateExpense, isInputModalOpen, closeInputModal,
+    inputInitialType, inputInitialCategoryId, inputInitialAmount, inputInitialIsRepayment, editingExpense,
   } = useExpenseStore();
 
   const isVisible = visible !== undefined ? visible : isInputModalOpen;
@@ -34,16 +35,23 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
   const [isLoanRepayment, setIsLoanRepayment] = useState(false);
 
   useEffect(() => {
-    if (isVisible) {
+    if (!isVisible) return;
+    setStep('form');
+    if (editingExpense) {
+      setActiveType(editingExpense.type); setAmount(editingExpense.amount.toString());
+      setNote(editingExpense.note || ''); setSelectedCategoryId(editingExpense.categoryId);
+      setSource(editingExpense.source || 'cash'); setIsSavingLoan(!!editingExpense.isSavingLoan);
+      setIsLoanRepayment(!!editingExpense.isLoanRepayment);
+    } else {
       const type = inputInitialType || 'expense';
-      setActiveType(type); setSource('cash'); setIsSavingLoan(false); setStep('form');
+      setActiveType(type); setSource('cash'); setIsSavingLoan(false);
       const firstCat = categories.find((c) => c.type === type);
       setSelectedCategoryId(inputInitialCategoryId || firstCat?.id || null);
       setAmount(inputInitialAmount ? inputInitialAmount.toString() : '');
       setIsLoanRepayment(!!inputInitialIsRepayment);
       if (inputInitialIsRepayment) setNote('Pelunasan pinjaman tabungan');
     }
-  }, [isVisible, inputInitialType, inputInitialCategoryId, inputInitialAmount, inputInitialIsRepayment, categories]);
+  }, [isVisible, inputInitialType, inputInitialCategoryId, inputInitialAmount, inputInitialIsRepayment, editingExpense, categories]);
 
   const handleTypeChange = (t: TransactionType) => {
     setActiveType(t);
@@ -54,63 +62,55 @@ export default function BottomSheetInput({ visible, onClose }: Props) {
   const handleSave = () => {
     const clean = parseInt(amount, 10);
     if (!clean || !selectedCategoryId) return;
-    const [cId, n, t, s, l, r] = [selectedCategoryId, note, activeType, source, isSavingLoan, isLoanRepayment];
+    const [cId, n, t, s, l, r, target] = [selectedCategoryId, note, activeType, source, isSavingLoan, isLoanRepayment, editingExpense];
     setAmount(''); setNote(''); handleClose();
-    addExpense(clean, cId, n, t, s, l, r).catch(console.error);
+    if (target) {
+      updateExpense({
+        ...target, amount: clean, categoryId: cId, note: n, type: t,
+        source: t === 'expense' ? s : undefined,
+        isSavingLoan: t === 'expense' && s === 'saving' ? !!l : undefined,
+        isLoanRepayment: t === 'saving' ? !!r : undefined,
+      }).catch(console.error);
+    } else {
+      addExpense(clean, cId, n, t, s, l, r).catch(console.error);
+    }
   };
 
   const selectedCat = categories.find((c) => c.id === selectedCategoryId);
   const typeConfig = inputTypeConfigs[activeType];
-  const canSave = Boolean(amount && selectedCategoryId);
 
   return (
     <Modal visible={isVisible} animationType="slide" presentationStyle="fullScreen" onRequestClose={handleClose}>
       {step === 'category' ? (
         <CategoryPickerScreen
-          categories={categories}
-          activeType={activeType}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={setSelectedCategoryId}
-          onBack={() => setStep('form')}
+          categories={categories} activeType={activeType} selectedCategoryId={selectedCategoryId}
+          onSelectCategory={setSelectedCategoryId} onBack={() => setStep('form')}
         />
       ) : (
         <View className="flex-1 bg-white pt-12 px-5">
-          <InputModalHeader title="Catat Transaksi" onClose={handleClose} />
+          <InputModalHeader title={editingExpense ? 'Edit Transaksi' : 'Catat Transaksi'} onClose={handleClose} />
           <InputTypeTabs activeType={activeType} onChangeType={handleTypeChange} />
 
           <ScrollView className="flex-1" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 24 }}>
             <InputAmountHero amount={amount} onChangeAmount={setAmount} activeType={activeType} />
-
             {activeType === 'expense' && (
               <ExpenseSourceSelector
-                source={source}
-                onSourceChange={setSource}
-                isSavingLoan={isSavingLoan}
-                onToggleSavingLoan={() => setIsSavingLoan((p) => !p)}
+                source={source} onSourceChange={setSource}
+                isSavingLoan={isSavingLoan} onToggleSavingLoan={() => setIsSavingLoan((p) => !p)}
               />
             )}
-
             {activeType === 'saving' && (
-              <SavingRepaymentOption
-                isRepayment={isLoanRepayment}
-                onToggle={() => setIsLoanRepayment((p) => !p)}
-              />
+              <SavingRepaymentOption isRepayment={isLoanRepayment} onToggle={() => setIsLoanRepayment((p) => !p)} />
             )}
-
             <InputCategoryTileRow selectedCategory={selectedCat} onPress={() => setStep('category')} />
             <InputNoteField note={note} onChangeNote={setNote} />
-
-            <TouchableOpacity
+            {editingExpense && <EditDateBadge dateIso={editingExpense.date} />}
+            <InputSubmitButton
+              canSave={Boolean(amount && selectedCategoryId)}
+              btnBg={typeConfig.btnBg}
+              btnText={editingExpense ? 'Simpan Perubahan' : typeConfig.btnText}
               onPress={handleSave}
-              disabled={!canSave}
-              className={`p-4 rounded-2xl flex-row items-center justify-center gap-2 ${canSave ? typeConfig.btnBg : 'bg-slate-200'}`}
-              style={canSave ? { elevation: 3 } : undefined}
-            >
-              <Check size={18} color={canSave ? '#FFFFFF' : '#94A3B8'} strokeWidth={2.5} />
-              <Text className={`font-black text-sm ${canSave ? 'text-white' : 'text-slate-400'}`}>
-                {typeConfig.btnText}
-              </Text>
-            </TouchableOpacity>
+            />
           </ScrollView>
         </View>
       )}

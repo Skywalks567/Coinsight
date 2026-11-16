@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { ReceiptText, ArrowRight } from 'lucide-react-native';
 import { Expense, Category } from '../types/expense';
+import { useExpenseStore } from '../store/useExpenseStore';
 import DeleteConfirmModal from './history/DeleteConfirmModal';
 import TransactionHistoryItem from './history/TransactionHistoryItem';
 
@@ -18,6 +19,7 @@ export default function ExpenseHistoryList({
   onDeleteExpense,
   onViewAll,
 }: Props) {
+  const { openEditModal } = useExpenseStore();
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const handleConfirmDelete = () => {
@@ -57,6 +59,7 @@ export default function ExpenseHistoryList({
               item={item}
               category={categories.find((c) => c.id === item.categoryId)}
               onPressDelete={setDeleteTargetId}
+              onPressEdit={openEditModal}
             />
           ))}
 

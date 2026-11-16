@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { ChevronLeft, ChevronRight, Calendar, Sliders, FileSpreadsheet } from 'lucide-react-native';
+import { ChevronLeft, ChevronRight, Calendar, Sliders, FileSpreadsheet, FileText } from 'lucide-react-native';
 
 type Props = {
   currentDate: Date;
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onOpenPicker: () => void;
-  onExport?: () => void;
+  onExportExcel?: () => void;
+  onExportPdf?: () => void;
   label: string;
   isCustom: boolean;
 };
@@ -17,7 +18,8 @@ export default function ReportHeader({
   onPrevMonth,
   onNextMonth,
   onOpenPicker,
-  onExport,
+  onExportExcel,
+  onExportPdf,
   label,
   isCustom,
 }: Props) {
@@ -40,19 +42,28 @@ export default function ReportHeader({
           <Text className="text-slate-900 text-2xl font-black">Analisis Pengeluaran</Text>
         </View>
 
-        {onExport && (
-          <TouchableOpacity
-            onPress={onExport}
-            activeOpacity={0.7}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
-          >
-            <FileSpreadsheet size={18} color="#059669" />
-          </TouchableOpacity>
-        )}
+        <View className="flex-row items-center gap-2">
+          {onExportExcel && (
+            <TouchableOpacity
+              onPress={onExportExcel}
+              activeOpacity={0.7}
+              className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+            >
+              <FileSpreadsheet size={17} color="#059669" />
+            </TouchableOpacity>
+          )}
+          {onExportPdf && (
+            <TouchableOpacity
+              onPress={onExportPdf}
+              activeOpacity={0.7}
+              className="w-10 h-10 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-sm"
+            >
+              <FileText size={17} color="#E11D48" />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
-      {/* Month & Period Navigator Capsule */}
       <View
         className="bg-white border border-slate-200/90 rounded-2xl p-2 flex-row items-center justify-between"
         style={{ elevation: 1 }}
@@ -61,14 +72,11 @@ export default function ReportHeader({
           onPress={onPrevMonth}
           disabled={isCustom}
           activeOpacity={0.7}
-          className={`w-8 h-8 rounded-xl bg-slate-100 items-center justify-center ${
-            isCustom ? 'opacity-20' : ''
-          }`}
+          className={`w-8 h-8 rounded-xl bg-slate-100 items-center justify-center ${isCustom ? 'opacity-20' : ''}`}
         >
           <ChevronLeft size={16} color="#475569" />
         </TouchableOpacity>
 
-        {/* Clickable Center Capsule to open full Date Picker Modal */}
         <TouchableOpacity
           onPress={onOpenPicker}
           activeOpacity={0.7}
@@ -83,9 +91,7 @@ export default function ReportHeader({
           onPress={onNextMonth}
           disabled={isCurrentMonth || isCustom}
           activeOpacity={0.7}
-          className={`w-8 h-8 rounded-xl bg-slate-100 items-center justify-center ${
-            isCurrentMonth || isCustom ? 'opacity-20' : ''
-          }`}
+          className={`w-8 h-8 rounded-xl bg-slate-100 items-center justify-center ${isCurrentMonth || isCustom ? 'opacity-20' : ''}`}
         >
           <ChevronRight size={16} color="#475569" />
         </TouchableOpacity>

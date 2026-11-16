@@ -1,27 +1,25 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import { Download, Upload, FileSpreadsheet } from 'lucide-react-native';
+import { Download, Upload } from 'lucide-react-native';
 
 type Props = {
   totalRecords: number;
   onExport: () => void;
-  onExportCsv: () => void;
   onImport: () => void;
 };
 
 export default function BackupRestoreSection({
   totalRecords,
   onExport,
-  onExportCsv,
   onImport,
 }: Props) {
   return (
     <View className="bg-white border border-slate-200/90 rounded-3xl p-5 mb-5 shadow-sm">
       <Text className="text-slate-800 font-extrabold text-xs uppercase tracking-wider mb-1.5">
-        Manajemen Berkas Cadangan
+        Cadangan & Pemulihan Data
       </Text>
       <Text className="text-slate-400 text-xs mb-4">
-        Cadangkan catatan ke file fisik .json atau pulihkan data dari file cadangan.
+        Cadangkan database ke file fisik .json atau pulihkan data saat berganti ponsel.
       </Text>
 
       <TouchableOpacity
@@ -34,18 +32,6 @@ export default function BackupRestoreSection({
           <Text className="text-slate-700 text-xs font-bold">Ekspor Cadangan JSON (.json)</Text>
         </View>
         <Text className="text-slate-400 text-[11px] font-semibold">{totalRecords} Catatan</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        onPress={onExportCsv}
-        activeOpacity={0.7}
-        className="bg-slate-50 border border-slate-200 py-3.5 px-4 rounded-2xl flex-row items-center justify-between mb-3 shadow-sm"
-      >
-        <View className="flex-row items-center gap-2.5">
-          <FileSpreadsheet size={16} color="#059669" />
-          <Text className="text-slate-700 text-xs font-bold">Ekspor Laporan Excel (.xlsx)</Text>
-        </View>
-        <Text className="text-emerald-600 text-[11px] font-bold">Multi-Sheet</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

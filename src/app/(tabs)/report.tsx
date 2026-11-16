@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, ScrollView, StatusBar, Alert } from 'react-native';
 import { useExpenseStore, TransactionType } from '../../store/useExpenseStore';
 import { exportTransactionsToExcel } from '../../services/excelExportService';
+import { exportTransactionsToPdf } from '../../services/pdfExportService';
 import ReportHeader from '../../components/report/ReportHeader';
 import ReportTabSwitch from '../../components/report/ReportTabSwitch';
 import ReportDonutHeroCard from '../../components/report/ReportDonutHeroCard';
@@ -11,7 +12,7 @@ import ReportDatePickerModal from '../../components/report/ReportDatePickerModal
 import { getMonthDateRange, formatCustomDateRange, DateRange } from '../../components/report/reportDateUtils';
 
 export default function ReportScreen() {
-  const { expenses, categories, deleteExpense } = useExpenseStore();
+  const { expenses, categories, deleteExpense, monthlyBudget, budgetMode } = useExpenseStore();
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [dateRange, setDateRange] = useState<DateRange>(() => getMonthDateRange(new Date()));
   const [isPickerOpen, setIsPickerOpen] = useState(false);
@@ -22,26 +23,15 @@ export default function ReportScreen() {
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1);
     setSelectedDate(d); setDateRange(getMonthDateRange(d));
   };
-
   const handleNextMonth = () => {
     const now = new Date();
     if (selectedDate.getFullYear() === now.getFullYear() && selectedDate.getMonth() >= now.getMonth()) return;
     const d = new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1);
     setSelectedDate(d); setDateRange(getMonthDateRange(d));
   };
-
-  const handleSelectMonth = (d: Date) => {
-    setSelectedDate(d);
-    setDateRange(getMonthDateRange(d));
-  };
-
+  const handleSelectMonth = (d: Date) => { setSelectedDate(d); setDateRange(getMonthDateRange(d)); };
   const handleApplyCustom = (start: string, end: string) => {
-    setDateRange({
-      startDate: start,
-      endDate: end,
-      label: formatCustomDateRange(start, end),
-      isCustom: true,
-    });
+    setDateRange({ startDate: start, endDate: end, label: formatCustomDateRange(start, end), isCustom: true });
   };
 
   const periodExpenses = expenses.filter((e) => {
@@ -59,44 +49,44 @@ export default function ReportScreen() {
   const endEffective = dateRange.endDate < nowStr ? dateRange.endDate : nowStr;
   const startD = new Date(dateRange.startDate);
   const endD = new Date(endEffective);
-  const diffDays = Math.max(1, Math.round((endD.getTime() - startD.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+  const diffDays = Math.max(1, Math.round((endD.getTime() - startD.getTime()) / 86400000) + 1);
   const dailyAverage = Math.floor(totalExpense / diffDays);
 
   const filteredList = periodExpenses.filter((e) => (filterType === 'all' ? true : e.type === filterType));
 
   const handleExportExcel = async () => {
-    if (!periodExpenses.length) return Alert.alert('Info', 'Tidak ada transaksi pada periode ini untuk diekspor.');
+    if (!periodExpenses.length) return Alert.alert('Info', 'Tidak ada transaksi pada periode ini.');
     const ok = await exportTransactionsToExcel(periodExpenses, categories, dateRange.label);
     if (!ok) Alert.alert('Gagal', 'Terjadi kesalahan saat mengekspor file Excel.');
+  };
+
+  const handleExportPdf = async () => {
+    if (!periodExpenses.length) return Alert.alert('Info', 'Tidak ada transaksi pada periode ini.');
+    const ok = await exportTransactionsToPdf(
+      periodExpenses,
+      categories,
+      monthlyBudget,
+      budgetMode,
+      dateRange.label,
+      dailyAverage
+    );
+    if (!ok) Alert.alert('Gagal', 'Terjadi kesalahan saat mengekspor file PDF.');
   };
 
   return (
     <View className="flex-1 bg-slate-50">
       <StatusBar barStyle="dark-content" />
-
       <ScrollView className="flex-1 px-5 pt-12" showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
         <ReportHeader
-          currentDate={selectedDate}
-          onPrevMonth={handlePrevMonth}
-          onNextMonth={handleNextMonth}
-          onOpenPicker={() => setIsPickerOpen(true)}
-          onExport={handleExportExcel}
-          label={dateRange.label}
-          isCustom={dateRange.isCustom}
+          currentDate={selectedDate} onPrevMonth={handlePrevMonth} onNextMonth={handleNextMonth}
+          onOpenPicker={() => setIsPickerOpen(true)} onExportExcel={handleExportExcel} onExportPdf={handleExportPdf}
+          label={dateRange.label} isCustom={dateRange.isCustom}
         />
-
         <ReportTabSwitch activeTab={activeTab} onTabChange={setActiveTab} txCount={periodExpenses.length} />
-
         {activeTab === 'summary' ? (
           <View key="summary-tab-content">
             <ReportDonutHeroCard expenses={periodExpenses} categories={categories} totalExpense={totalExpense} />
-            <ReportMetricDuo
-              savingsRate={savingsRate}
-              totalSaving={totalSaving}
-              savingSpent={savingSpent}
-              dailyAverage={dailyAverage}
-              daysCount={diffDays}
-            />
+            <ReportMetricDuo savingsRate={savingsRate} totalSaving={totalSaving} savingSpent={savingSpent} dailyAverage={dailyAverage} daysCount={diffDays} />
           </View>
         ) : (
           <View key="transactions-tab-content">
@@ -106,12 +96,8 @@ export default function ReportScreen() {
       </ScrollView>
 
       <ReportDatePickerModal
-        visible={isPickerOpen}
-        onClose={() => setIsPickerOpen(false)}
-        selectedDate={selectedDate}
-        onSelectMonthDate={handleSelectMonth}
-        startDate={dateRange.startDate}
-        endDate={dateRange.endDate}
+        visible={isPickerOpen} onClose={() => setIsPickerOpen(false)} selectedDate={selectedDate}
+        onSelectMonthDate={handleSelectMonth} startDate={dateRange.startDate} endDate={dateRange.endDate}
         onApplyCustomRange={handleApplyCustom}
       />
     </View>

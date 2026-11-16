@@ -51,8 +51,8 @@ export async function dbGetExpenses(): Promise<Expense[]> {
 export async function dbInsertExpense(exp: Expense): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'INSERT INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan, isLoanRepayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [exp.amount, exp.categoryId, exp.date, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0, exp.id]
+    'INSERT OR REPLACE INTO expenses (id, amount, categoryId, date, note, type, source, isSavingLoan, isLoanRepayment) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [exp.id, exp.amount, exp.categoryId, exp.date, exp.note || '', exp.type, exp.source || 'cash', exp.isSavingLoan ? 1 : 0, exp.isLoanRepayment ? 1 : 0]
   );
 }
 

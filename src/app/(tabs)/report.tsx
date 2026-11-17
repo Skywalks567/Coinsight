@@ -41,8 +41,14 @@ export default function ReportScreen() {
 
   const totalExpense = periodExpenses.filter((e) => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = periodExpenses.filter((e) => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
-  const totalSaving = periodExpenses.filter((e) => e.type === 'saving').reduce((sum, e) => sum + e.amount, 0);
-  const savingSpent = periodExpenses.filter((e) => e.type === 'expense' && e.source === 'saving').reduce((sum, e) => sum + e.amount, 0);
+  const totalSaving = periodExpenses.filter((e) => e.type === 'saving' && !e.isLoanRepayment).reduce((sum, e) => sum + e.amount, 0);
+  const globalUnpaid = Math.max(0,
+    expenses.filter((e) => e.type === 'expense' && e.source === 'saving' && e.isSavingLoan).reduce((s, e) => s + e.amount, 0) -
+    expenses.filter((e) => e.type === 'saving' && e.isLoanRepayment).reduce((s, e) => s + e.amount, 0)
+  );
+  const permSpent = periodExpenses.filter((e) => e.type === 'expense' && e.source === 'saving' && !e.isSavingLoan).reduce((s, e) => s + e.amount, 0);
+  const periodLoan = periodExpenses.filter((e) => e.type === 'expense' && e.source === 'saving' && e.isSavingLoan).reduce((s, e) => s + e.amount, 0);
+  const savingSpent = permSpent + (globalUnpaid > 0 ? Math.min(globalUnpaid, periodLoan) : 0);
   const savingsRate = totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
 
   const nowStr = new Date().toISOString().substring(0, 10);

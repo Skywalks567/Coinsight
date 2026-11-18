@@ -27,7 +27,11 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     set({ budgetMode: mode });
     await dbSetSetting('budgetMode', mode);
   },
-  toggleBalanceHidden: () => set((s) => ({ isBalanceHidden: !s.isBalanceHidden })),
+  toggleBalanceHidden: async () => {
+    const next = !get().isBalanceHidden;
+    set({ isBalanceHidden: next });
+    await dbSetSetting('isBalanceHidden', next ? '1' : '0');
+  },
   openInputModal: (type = 'expense', categoryId = null, initialAmount = null, isRepayment = false) =>
     set({
       isInputModalOpen: true, editingExpense: null, inputInitialType: type,
@@ -41,15 +45,19 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
 
   initialize: async () => {
     try {
-      const storedExpenses = await dbGetExpenses();
-      const storedBudgetStr = await dbGetSetting('monthlyBudget', '3000000');
-      const storedMode = (await dbGetSetting('budgetMode', 'auto')) as 'auto' | 'manual';
-      const storedAlarm = await dbGetSetting('alarmTime', '20:00');
+      const [storedExpenses, storedBudgetStr, storedMode, storedAlarm, storedHidden] = await Promise.all([
+        dbGetExpenses(),
+        dbGetSetting('monthlyBudget', '3000000'),
+        dbGetSetting('budgetMode', 'auto'),
+        dbGetSetting('alarmTime', '20:00'),
+        dbGetSetting('isBalanceHidden', '0'),
+      ]);
       set({
         expenses: storedExpenses,
         monthlyBudget: parseInt(storedBudgetStr, 10) || 3000000,
         budgetMode: storedMode === 'manual' ? 'manual' : 'auto',
         alarmTime: storedAlarm,
+        isBalanceHidden: storedHidden === '1',
         isLoading: false,
       });
       await syncSmartAlarm(storedAlarm, storedExpenses);

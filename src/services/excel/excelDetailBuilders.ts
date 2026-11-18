@@ -77,18 +77,17 @@ export function buildIncomeWorksheet(expenses: Expense[], categories: Category[]
 }
 
 export function buildSavingWorksheet(expenses: Expense[]): XLSX.WorkSheet {
-  const items = expenses.filter((e) => e.type === 'saving');
+  const items = expenses.filter((e) => e.type === 'saving' && !e.isLoanRepayment);
   const total = items.reduce((sum, e) => sum + e.amount, 0);
-  const aoa: any[][] = [['No', 'Tanggal & Jam', 'Nominal (Rp)', 'Jenis Transaksi', 'Catatan']];
+  const aoa: any[][] = [['No', 'Tanggal & Jam', 'Jenis Transaksi', 'Nominal (Rp)', 'Catatan']];
 
   items.forEach((e, idx) => {
-    const typeLabel = e.isLoanRepayment ? 'Pelunasan Pinjaman' : 'Setor Tabungan';
-    aoa.push([idx + 1, formatDateTime(e.date), e.amount, typeLabel, e.note || '-']);
+    aoa.push([idx + 1, formatDateTime(e.date), 'Setor Tabungan', e.amount, e.note || '-']);
   });
-  aoa.push(['', 'TOTAL TABUNGAN', total, '', '']);
+  aoa.push(['', '', 'TOTAL TABUNGAN', total, '']);
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 32 }];
+  ws['!cols'] = [{ wch: 6 }, { wch: 20 }, { wch: 24 }, { wch: 18 }, { wch: 32 }];
 
   const header = createHeaderStyle(excelColors.SKY);
   for (let c = 0; c < 5; c++) applyCellBorders(ws, 0, c, header);
@@ -97,14 +96,14 @@ export function buildSavingWorksheet(expenses: Expense[]): XLSX.WorkSheet {
     const r = idx + 1;
     applyCellBorders(ws, r, 0, dataStyleCenter);
     applyCellBorders(ws, r, 1, dataStyleCenter);
-    applyCellBorders(ws, r, 2, dataStyleNumber);
-    applyCellBorders(ws, r, 3, dataStyleCenter);
+    applyCellBorders(ws, r, 2, dataStyleCenter);
+    applyCellBorders(ws, r, 3, dataStyleNumber);
     applyCellBorders(ws, r, 4, dataStyle);
   });
 
   const lastR = items.length + 1;
   for (let c = 0; c < 5; c++) {
-    applyCellBorders(ws, lastR, c, c === 2 ? totalNumberStyle : totalLabelStyle);
+    applyCellBorders(ws, lastR, c, c === 3 ? totalNumberStyle : totalLabelStyle);
   }
   return ws;
 }

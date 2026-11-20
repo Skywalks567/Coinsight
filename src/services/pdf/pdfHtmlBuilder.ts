@@ -18,9 +18,9 @@ export function generateReportPdfHtml(
 ): string {
   const totalExpense = expenses.filter((e) => e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
   const totalIncome = expenses.filter((e) => e.type === 'income').reduce((sum, e) => sum + e.amount, 0);
-  const rawSaving = expenses.filter((e) => e.type === 'saving').reduce((sum, e) => sum + e.amount, 0);
-  const savingSpent = expenses.filter((e) => e.type === 'expense' && e.source === 'saving').reduce((sum, e) => sum + e.amount, 0);
-  const totalSaving = Math.max(0, rawSaving - savingSpent);
+  const permSpent = expenses.filter((e) => e.type === 'expense' && e.source === 'saving' && !e.isSavingLoan).reduce((sum, e) => sum + e.amount, 0);
+  const rawSaving = expenses.filter((e) => e.type === 'saving' && !e.isLoanRepayment).reduce((sum, e) => sum + e.amount, 0);
+  const totalSaving = Math.max(0, rawSaving - permSpent);
   const netCash = totalIncome - totalExpense - totalSaving;
 
   const savingsRate = totalIncome > 0 ? Math.round((totalSaving / totalIncome) * 100) : 0;
@@ -46,6 +46,7 @@ export function generateReportPdfHtml(
   const loanBorrowed = expenses.filter((e) => e.type === 'expense' && e.isSavingLoan).reduce((s, e) => s + e.amount, 0);
   const loanRepaid = expenses.filter((e) => e.type === 'saving' && e.isLoanRepayment).reduce((s, e) => s + e.amount, 0);
   const totalLoan = Math.max(0, loanBorrowed - loanRepaid);
+
 
   const printDate = new Date().toLocaleDateString('id-ID', {
     day: 'numeric',
@@ -74,7 +75,7 @@ export function generateReportPdfHtml(
       ${buildCategoryTableHtml(expenses, categories)}
       ${buildTransactionTableHtml(expenses, categories)}
       <div class="footer-wrap">
-        <div>Expense Tracker • Laporan Finansial Bulanan</div>
+        <div>Coinsight • Laporan Finansial Bulanan</div>
         <div>Akhir Laporan • Total ${expenses.length} Transaksi</div>
       </div>
     </body>

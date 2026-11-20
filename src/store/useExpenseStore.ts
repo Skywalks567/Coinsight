@@ -23,10 +23,7 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
     await dbSetSetting('alarmTime', time);
     await syncSmartAlarm(time, get().expenses);
   },
-  setBudgetMode: async (mode) => {
-    set({ budgetMode: mode });
-    await dbSetSetting('budgetMode', mode);
-  },
+  setBudgetMode: async (mode) => { set({ budgetMode: mode }); await dbSetSetting('budgetMode', mode); },
   toggleBalanceHidden: async () => {
     const next = !get().isBalanceHidden;
     set({ isBalanceHidden: next });
@@ -46,11 +43,8 @@ export const useExpenseStore = create<ExpenseState>((set, get) => ({
   initialize: async () => {
     try {
       const [storedExpenses, storedBudgetStr, storedMode, storedAlarm, storedHidden] = await Promise.all([
-        dbGetExpenses(),
-        dbGetSetting('monthlyBudget', '3000000'),
-        dbGetSetting('budgetMode', 'auto'),
-        dbGetSetting('alarmTime', '20:00'),
-        dbGetSetting('isBalanceHidden', '0'),
+        dbGetExpenses(), dbGetSetting('monthlyBudget', '3000000'), dbGetSetting('budgetMode', 'auto'),
+        dbGetSetting('alarmTime', '20:00'), dbGetSetting('isBalanceHidden', '0'),
       ]);
       set({
         expenses: storedExpenses,

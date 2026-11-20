@@ -97,7 +97,7 @@ export default function GuideScreen() {
 
         <View className="items-center mt-6">
           <Text className="text-slate-400 text-[10px] font-bold">
-            Expense Tracker v1.0.0 • Offline Local Database
+            Coinsight v1.0.0 • Offline Local Database
           </Text>
         </View>
       </ScrollView>

@@ -75,7 +75,7 @@ export function generateReportPdfHtml(
       ${buildCategoryTableHtml(expenses, categories)}
       ${buildTransactionTableHtml(expenses, categories)}
       <div class="footer-wrap">
-        <div>Expense Tracker • Laporan Finansial Bulanan</div>
+        <div>Coinsight • Laporan Finansial Bulanan</div>
         <div>Akhir Laporan • Total ${expenses.length} Transaksi</div>
       </div>
     </body>

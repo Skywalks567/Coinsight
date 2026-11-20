@@ -22,7 +22,7 @@ export function buildHeaderHtml(periodLabel: string, printDate: string): string 
   return `
     <div class="header-wrap">
       <div>
-        <div class="brand-title">EXPENSE TRACKER</div>
+        <div class="brand-title">COINSIGHT</div>
         <div class="brand-sub">Laporan Arus Kas Finansial</div>
       </div>
       <div class="doc-meta">
